@@ -2,8 +2,9 @@ package main
 
 import (
 	"context"
-	"go.etcd.io/raft/v3"
 	"time"
+
+	"go.etcd.io/raft/v3"
 )
 
 func main() {

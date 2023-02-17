@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option go_package = "api/v1";
+
+package api.v1;
+
+service Broadcast {
+  rpc Broadcast(BroadcastRequest) returns (BroadcastResponse);
+}
+
+message BroadcastRequest {
+  uint32 value = 1;
+}
+
+message BroadcastResponse {
+  string message = 1;
+}
