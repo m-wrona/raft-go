@@ -26,7 +26,7 @@ type cluster struct {
 }
 
 // newCluster creates a cluster of n nodes
-func newCluster(n int) *cluster {
+func newCluster(n int, dirPath string) *cluster {
 	peers := make([]string, n)
 	for i := range peers {
 		peers[i] = fmt.Sprintf("http://127.0.0.1:%d", 10000+i)
@@ -48,7 +48,7 @@ func newCluster(n int) *cluster {
 		clus.confChangeC[i] = make(chan raftpb.ConfChange, 1)
 		fn, snapshotTriggeredC := getSnapshotFn()
 		clus.snapshotTriggeredC[i] = snapshotTriggeredC
-		clus.commitC[i], clus.errorC[i], _ = newRaftNode(i+1, clus.peers, false, fn, clus.proposeC[i], clus.confChangeC[i])
+		clus.commitC[i], clus.errorC[i], _ = newRaftNode(i+1, clus.peers, false, fn, clus.proposeC[i], clus.confChangeC[i], dirPath)
 	}
 
 	return clus
@@ -85,7 +85,7 @@ func (clus *cluster) closeNoErrors(t *testing.T) {
 // TestProposeOnCommit starts three nodes and feeds commits back into the proposal
 // channel. The intent is to ensure blocking on a proposal won't block raft progress.
 func Test_Raft_ProposeOnCommit(t *testing.T) {
-	clus := newCluster(3)
+	clus := newCluster(3, t.TempDir())
 	defer clus.closeNoErrors(t)
 
 	donec := make(chan struct{})
@@ -122,7 +122,7 @@ func Test_Raft_ProposeOnCommit(t *testing.T) {
 
 // TestCloseProposerBeforeReplay tests closing the producer before raft starts.
 func Test_Raft_CloseProposerBeforeReplay(t *testing.T) {
-	clus := newCluster(1)
+	clus := newCluster(1, t.TempDir())
 	// close before replay so raft never starts
 	defer clus.closeNoErrors(t)
 }
@@ -130,7 +130,7 @@ func Test_Raft_CloseProposerBeforeReplay(t *testing.T) {
 // TestCloseProposerInflight tests closing the producer while
 // committed messages are being published to the client.
 func Test_Raft_CloseProposerInflight(t *testing.T) {
-	clus := newCluster(1)
+	clus := newCluster(1, t.TempDir())
 	defer clus.closeNoErrors(t)
 
 	// some inflight ops
@@ -147,7 +147,7 @@ func Test_Raft_CloseProposerInflight(t *testing.T) {
 
 // TestAddNewNode tests adding new node to the existing cluster.
 func Test_Raft_AddNewNode(t *testing.T) {
-	clus := newCluster(3)
+	clus := newCluster(3, t.TempDir())
 	defer clus.closeNoErrors(t)
 
 	os.RemoveAll("raftexample-4")
@@ -170,7 +170,7 @@ func Test_Raft_AddNewNode(t *testing.T) {
 	confChangeC := make(chan raftpb.ConfChange)
 	defer close(confChangeC)
 
-	newRaftNode(4, append(clus.peers, newNodeURL), true, nil, proposeC, confChangeC)
+	newRaftNode(4, append(clus.peers, newNodeURL), true, nil, proposeC, confChangeC, t.TempDir())
 
 	go func() {
 		proposeC <- "foo"
@@ -191,7 +191,7 @@ func Test_Raft_Snapshot(t *testing.T) {
 		snapshotCatchUpEntriesN = prevSnapshotCatchUpEntriesN
 	}()
 
-	clus := newCluster(3)
+	clus := newCluster(3, t.TempDir())
 	defer clus.closeNoErrors(t)
 
 	go func() {

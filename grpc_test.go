@@ -25,13 +25,14 @@ type TestServer struct {
 	KeyValueClient apiV1.KeyValueServiceClient
 }
 
-func StartTestGrpcServer(clusters []string, proposeC chan string, confChangeC chan raftpb.ConfChange) *TestServer {
+func StartTestGrpcServer(id int, clusters []string, proposeC chan string, confChangeC chan raftpb.ConfChange, dirPath string) *TestServer {
 	var kvs *kvstore
 	getSnapshot := func() ([]byte, error) { return kvs.getSnapshot() }
-	commitC, errorC, snapshotterReady := newRaftNode(1, clusters, false, getSnapshot, proposeC, confChangeC)
+	join := id > 1
+	commitC, errorC, snapshotterReady := newRaftNode(id, clusters, join, getSnapshot, proposeC, confChangeC, dirPath)
 	kvs = newKVStore(<-snapshotterReady, proposeC, commitC, errorC)
 
-	time.Sleep(500 * time.Millisecond) // time for leader election
+	time.Sleep(500 * time.Millisecond)
 
 	serverUrl := RandomServerUrl()
 	log, _ := zap.NewDevelopment()
@@ -50,11 +51,19 @@ func StartTestGrpcServer(clusters []string, proposeC chan string, confChangeC ch
 		}
 	}()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-	defer cancel()
-	conn, err := grpc.DialContext(ctx, serverUrl, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
+	var conn *grpc.ClientConn
+	var err error
+	for i := 0; i < 60; i++ {
+		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+		conn, err = grpc.DialContext(ctx, serverUrl, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
+		cancel()
+		if err == nil {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
 	if err != nil {
-		panic(fmt.Errorf("GRPC client connection error: %s", err))
+		panic(fmt.Errorf("GRPC client %d connection error - url: %s, err: %s", id, serverUrl, err))
 	}
 
 	return &TestServer{

@@ -17,7 +17,7 @@ func assertValueEquals(t *testing.T, client apiV1.KeyValueServiceClient, wantVal
 		ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
 		getValueResp, err = client.Get(ctx, &apiV1.GetValueRequest{})
 		cancel()
-		if getValueResp != nil {
+		if getValueResp != nil && getValueResp.GetValue() == wantValue {
 			break
 		}
 		time.Sleep(100 * time.Millisecond)
