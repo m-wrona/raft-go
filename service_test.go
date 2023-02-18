@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.etcd.io/etcd/raft/v3/raftpb"
 
-	apiV1 "github/m-wrona/raft-go/generated/api/v1"
+	apiV1 "github/m-wrona/raft-go/model/api/v1"
 )
 
 func Test_Service_SingleNode_PutAndGetValue(t *testing.T) {

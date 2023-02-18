@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	apiV1 "github/m-wrona/raft-go/generated/api/v1"
+	apiV1 "github/m-wrona/raft-go/model/api/v1"
 )
 
 func assertValueEquals(t *testing.T, client apiV1.KeyValueServiceClient, wantValue uint32) {

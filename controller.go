@@ -10,8 +10,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health/grpc_health_v1"
 
-	apiV1 "github/m-wrona/raft-go/generated/api/v1"
-	raftV1 "github/m-wrona/raft-go/generated/raft/v1"
+	apiV1 "github/m-wrona/raft-go/model/api/v1"
+	raftV1 "github/m-wrona/raft-go/model/raft/v1"
 )
 
 const (
