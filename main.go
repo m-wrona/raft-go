@@ -1,86 +1,31 @@
 package main
 
 import (
-	"context"
-	"time"
+	"flag"
+	"strings"
 
-	"go.etcd.io/raft/v3"
+	"go.etcd.io/etcd/raft/v3/raftpb"
 )
 
 func main() {
-	peers := []raft.Peer{
-		{ID: 1, Context: nil},
-		{ID: 2, Context: nil},
-		{ID: 3, Context: nil},
-	}
-	nt := newRaftNetwork(1, 2, 3)
+	cluster := flag.String("cluster", "http://127.0.0.1:9021", "comma separated cluster peers")
+	id := flag.Int("id", 1, "node ID")
+	kvport := flag.Int("port", 9121, "key-value server port")
+	join := flag.Bool("join", false, "join an existing cluster")
+	flag.Parse()
 
-	nodes := make([]*node, 0)
+	proposeC := make(chan string)
+	defer close(proposeC)
+	confChangeC := make(chan raftpb.ConfChange)
+	defer close(confChangeC)
 
-	for i := 1; i <= len(peers); i++ {
-		n := startNode(uint64(i), peers, nt.nodeNetwork(uint64(i)))
-		nodes = append(nodes, n)
-	}
+	// raft provides a commit stream for the proposals from the http api
+	var kvs *kvstore
+	getSnapshot := func() ([]byte, error) { return kvs.getSnapshot() }
+	commitC, errorC, snapshotterReady := newRaftNode(*id, strings.Split(*cluster, ","), *join, getSnapshot, proposeC, confChangeC)
 
-	waitLeader(nodes)
+	kvs = newKVStore(<-snapshotterReady, proposeC, commitC, errorC)
 
-	var messagesCount uint64 = 100
-	for i := 0; i < int(messagesCount); i++ {
-		nodes[0].Propose(context.TODO(), []byte("somedata"))
-	}
-
-	if !waitCommitConverge(nodes, messagesCount) {
-		panic("commits failed to converge!")
-	}
-
-	for _, n := range nodes {
-		n.stop()
-	}
-}
-
-func waitLeader(ns []*node) int {
-	var l map[uint64]struct{}
-	var lindex int
-
-	for {
-		l = make(map[uint64]struct{})
-
-		for i, n := range ns {
-			lead := n.Status().SoftState.Lead
-			if lead != 0 {
-				l[lead] = struct{}{}
-				if n.id == lead {
-					lindex = i
-				}
-			}
-		}
-
-		if len(l) == 1 {
-			return lindex
-		}
-	}
-}
-
-func waitCommitConverge(ns []*node, target uint64) bool {
-	var c map[uint64]struct{}
-
-	for i := 0; i < 50; i++ {
-		c = make(map[uint64]struct{})
-		var good int
-
-		for _, n := range ns {
-			commit := n.Node.Status().HardState.Commit
-			c[commit] = struct{}{}
-			if commit > target {
-				good++
-			}
-		}
-
-		if len(c) == 1 && good == len(ns) {
-			return true
-		}
-		time.Sleep(100 * time.Millisecond)
-	}
-
-	return false
+	// the key-value http handler will propose updates to raft
+	serveHttpKVAPI(kvs, *kvport, confChangeC, errorC)
 }

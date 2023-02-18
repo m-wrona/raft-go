@@ -1,12 +1,13 @@
 package main
 
 import (
-	"go.uber.org/zap"
-	"google.golang.org/grpc"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"go.uber.org/zap"
+	"google.golang.org/grpc"
 )
 
 type Config struct {
@@ -25,6 +26,7 @@ func Start(server *grpc.Server, config Config, log *zap.Logger) {
 			log.Panic("Failed to serve GRPC", zap.Error(err))
 		}
 	}()
+
 	c := make(chan os.Signal, 1)
 	signal.Notify(c,
 		syscall.SIGINT,
@@ -32,6 +34,7 @@ func Start(server *grpc.Server, config Config, log *zap.Logger) {
 		syscall.SIGQUIT,
 		syscall.SIGHUP,
 	)
+	log.Info("Server running - waiting for interrupt signal...")
 	<-c
 	log.Info("Stopping server...")
 	server.GracefulStop()
