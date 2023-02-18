@@ -38,5 +38,5 @@ func main() {
 	server := grpc.NewServer()
 	newController(server, log, kvs, confChangeC)
 
-	StartGRPC(server, Config{Address: fmt.Sprintf("0.0.0.0:%d", *kvPort), Network: "tcp"}, log)
+	startGRPC(server, Config{Address: fmt.Sprintf("0.0.0.0:%d", *kvPort), Network: "tcp"}, log)
 }

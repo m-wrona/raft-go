@@ -15,7 +15,7 @@ type Config struct {
 	Address string `envconfig:"GRPC_ADDR" default:"0.0.0.0:8080"`
 }
 
-func StartGRPC(server *grpc.Server, config Config, log *zap.Logger) {
+func startGRPC(server *grpc.Server, config Config, log *zap.Logger) {
 	go func() {
 		log.Debug("Starting GRPC...", zap.Any("cfg", config))
 		listen, err := net.Listen(config.Network, config.Address)
