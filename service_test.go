@@ -40,11 +40,5 @@ func Test_Service_PutAndGetValue(t *testing.T) {
 	require.Nil(t, err, "value not set")
 	require.Truef(t, setValueResp.GetOk(), "value not set")
 
-	time.Sleep(3 * time.Second)
-
-	ctx2, cancel2 := context.WithTimeout(context.Background(), 200*time.Millisecond)
-	defer cancel2()
-	getValueResp, err := sut.KeyValueClient.Get(ctx2, &apiV1.GetValueRequest{})
-	require.Nilf(t, err, "value not read: %s", err)
-	require.Equal(t, wantValue, getValueResp.GetValue(), "value not read")
+	assertValueEquals(t, sut.KeyValueClient, wantValue)
 }
