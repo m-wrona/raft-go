@@ -1,12 +1,20 @@
 # raft-go
 
-Experiments using consensus algorithms, focusing on Raft. 
+Sample `GRPC` service prepared for embedded devices & IoT where orchestration (like k8s) is not present.
+
+Service is using `etcd` implementation of `Raft` algorithm (https://github.com/etcd-io/raft).
+
+Prerequisites:
+
+* Go 1.19
+* GRPC for Go (check `make install`)
+* [Goreman](https://github.com/mattn/goreman)
 
 ## Assumptions
 
 **Scope:**
 
-* embedded service composed of N nodes
+* embedded service composed of N nodes  
 
 * each service is using `Raft` consensus algorithm to find the leader
 
@@ -42,15 +50,6 @@ The `raft server` participates in consensus with its cluster peers.
 When the GRPC server submits a proposal, the raft server transmits the proposal to its peers.
 When raft reaches a consensus, the server publishes all committed updates over a commit channel.
 In our case, this commit channel is consumed by the key-value store.
-
-## Raft
-
-Sample is using `etcd` implementation of `Raft` algorithm:
-
-* https://github.com/etcd-io/raft
-
-* https://github.com/etcd-io/etcd/tree/main/contrib/raftexample
-
 
 ## Other docs
 

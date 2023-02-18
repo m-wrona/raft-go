@@ -2,9 +2,12 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"strings"
 
 	"go.etcd.io/etcd/raft/v3/raftpb"
+	"go.uber.org/zap"
+	"google.golang.org/grpc"
 )
 
 func main() {
@@ -13,6 +16,11 @@ func main() {
 	kvport := flag.Int("port", 9121, "key-value server port")
 	join := flag.Bool("join", false, "join an existing cluster")
 	flag.Parse()
+
+	log, err := zap.NewDevelopment()
+	if err != nil {
+		panic(err)
+	}
 
 	proposeC := make(chan string)
 	defer close(proposeC)
@@ -26,6 +34,8 @@ func main() {
 
 	kvs = newKVStore(<-snapshotterReady, proposeC, commitC, errorC)
 
-	// the key-value http handler will propose updates to raft
-	serveHttpKVAPI(kvs, *kvport, confChangeC, errorC)
+	server := grpc.NewServer()
+	newController(server, log, kvs, confChangeC)
+
+	StartGRPC(server, Config{Address: fmt.Sprintf("0.0.0.0:%d", *kvport), Network: "tcp"}, log)
 }

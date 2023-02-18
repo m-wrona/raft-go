@@ -10,4 +10,8 @@ generate:
 	@protoc \
 		--go_out=generated \
 		--go-grpc_out=require_unimplemented_servers=false:generated \
-		api.proto \
+		protos/api.proto
+	@protoc \
+    		--go_out=generated \
+    		--go-grpc_out=require_unimplemented_servers=false:generated \
+    		protos/raft.proto

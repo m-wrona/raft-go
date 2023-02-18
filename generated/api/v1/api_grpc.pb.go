@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v3.21.12
-// source: api.proto
+// source: protos/api.proto
 
 package v1
 
@@ -18,86 +18,122 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// BroadcastClient is the client API for Broadcast service.
+// KeyValueServiceClient is the client API for KeyValueService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type BroadcastClient interface {
-	Broadcast(ctx context.Context, in *BroadcastRequest, opts ...grpc.CallOption) (*BroadcastResponse, error)
+type KeyValueServiceClient interface {
+	Set(ctx context.Context, in *SetValueRequest, opts ...grpc.CallOption) (*SetValueResponse, error)
+	Get(ctx context.Context, in *GetValueRequest, opts ...grpc.CallOption) (*GetValueResponse, error)
 }
 
-type broadcastClient struct {
+type keyValueServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewBroadcastClient(cc grpc.ClientConnInterface) BroadcastClient {
-	return &broadcastClient{cc}
+func NewKeyValueServiceClient(cc grpc.ClientConnInterface) KeyValueServiceClient {
+	return &keyValueServiceClient{cc}
 }
 
-func (c *broadcastClient) Broadcast(ctx context.Context, in *BroadcastRequest, opts ...grpc.CallOption) (*BroadcastResponse, error) {
-	out := new(BroadcastResponse)
-	err := c.cc.Invoke(ctx, "/api.v1.Broadcast/Broadcast", in, out, opts...)
+func (c *keyValueServiceClient) Set(ctx context.Context, in *SetValueRequest, opts ...grpc.CallOption) (*SetValueResponse, error) {
+	out := new(SetValueResponse)
+	err := c.cc.Invoke(ctx, "/api.v1.KeyValueService/Set", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// BroadcastServer is the server API for Broadcast service.
-// All implementations should embed UnimplementedBroadcastServer
+func (c *keyValueServiceClient) Get(ctx context.Context, in *GetValueRequest, opts ...grpc.CallOption) (*GetValueResponse, error) {
+	out := new(GetValueResponse)
+	err := c.cc.Invoke(ctx, "/api.v1.KeyValueService/Get", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// KeyValueServiceServer is the server API for KeyValueService service.
+// All implementations should embed UnimplementedKeyValueServiceServer
 // for forward compatibility
-type BroadcastServer interface {
-	Broadcast(context.Context, *BroadcastRequest) (*BroadcastResponse, error)
+type KeyValueServiceServer interface {
+	Set(context.Context, *SetValueRequest) (*SetValueResponse, error)
+	Get(context.Context, *GetValueRequest) (*GetValueResponse, error)
 }
 
-// UnimplementedBroadcastServer should be embedded to have forward compatible implementations.
-type UnimplementedBroadcastServer struct {
+// UnimplementedKeyValueServiceServer should be embedded to have forward compatible implementations.
+type UnimplementedKeyValueServiceServer struct {
 }
 
-func (UnimplementedBroadcastServer) Broadcast(context.Context, *BroadcastRequest) (*BroadcastResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Broadcast not implemented")
+func (UnimplementedKeyValueServiceServer) Set(context.Context, *SetValueRequest) (*SetValueResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Set not implemented")
+}
+func (UnimplementedKeyValueServiceServer) Get(context.Context, *GetValueRequest) (*GetValueResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
 }
 
-// UnsafeBroadcastServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to BroadcastServer will
+// UnsafeKeyValueServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to KeyValueServiceServer will
 // result in compilation errors.
-type UnsafeBroadcastServer interface {
-	mustEmbedUnimplementedBroadcastServer()
+type UnsafeKeyValueServiceServer interface {
+	mustEmbedUnimplementedKeyValueServiceServer()
 }
 
-func RegisterBroadcastServer(s grpc.ServiceRegistrar, srv BroadcastServer) {
-	s.RegisterService(&Broadcast_ServiceDesc, srv)
+func RegisterKeyValueServiceServer(s grpc.ServiceRegistrar, srv KeyValueServiceServer) {
+	s.RegisterService(&KeyValueService_ServiceDesc, srv)
 }
 
-func _Broadcast_Broadcast_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(BroadcastRequest)
+func _KeyValueService_Set_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetValueRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BroadcastServer).Broadcast(ctx, in)
+		return srv.(KeyValueServiceServer).Set(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/api.v1.Broadcast/Broadcast",
+		FullMethod: "/api.v1.KeyValueService/Set",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BroadcastServer).Broadcast(ctx, req.(*BroadcastRequest))
+		return srv.(KeyValueServiceServer).Set(ctx, req.(*SetValueRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// Broadcast_ServiceDesc is the grpc.ServiceDesc for Broadcast service.
+func _KeyValueService_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetValueRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(KeyValueServiceServer).Get(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.v1.KeyValueService/Get",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(KeyValueServiceServer).Get(ctx, req.(*GetValueRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// KeyValueService_ServiceDesc is the grpc.ServiceDesc for KeyValueService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var Broadcast_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "api.v1.Broadcast",
-	HandlerType: (*BroadcastServer)(nil),
+var KeyValueService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "api.v1.KeyValueService",
+	HandlerType: (*KeyValueServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Broadcast",
-			Handler:    _Broadcast_Broadcast_Handler,
+			MethodName: "Set",
+			Handler:    _KeyValueService_Set_Handler,
+		},
+		{
+			MethodName: "Get",
+			Handler:    _KeyValueService_Get_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "api.proto",
+	Metadata: "protos/api.proto",
 }

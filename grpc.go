@@ -15,8 +15,9 @@ type Config struct {
 	Address string `envconfig:"GRPC_ADDR" default:"0.0.0.0:8080"`
 }
 
-func Start(server *grpc.Server, config Config, log *zap.Logger) {
+func StartGRPC(server *grpc.Server, config Config, log *zap.Logger) {
 	go func() {
+		log.Debug("Starting GRPC...", zap.Any("cfg", config))
 		listen, err := net.Listen(config.Network, config.Address)
 		if err != nil {
 			log.Panic("Failed to listen on GRPC address", zap.Error(err))
@@ -38,4 +39,8 @@ func Start(server *grpc.Server, config Config, log *zap.Logger) {
 	<-c
 	log.Info("Stopping server...")
 	server.GracefulStop()
+}
+
+func NewGRPCServer(config *Config, log *zap.Logger) *grpc.Server {
+	return grpc.NewServer()
 }

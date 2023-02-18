@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option go_package = "raft/v1";
+
+package api.v1;
+
+service RaftService {
+  rpc Add(NodeRequest) returns (NodeResponse);
+  rpc Remove(NodeRequest) returns (NodeResponse);
+}
+
+message NodeRequest {
+  uint64 id = 1;
+}
+
+message NodeResponse {
+  bool ok = 1;
+  string message = 2;
+}

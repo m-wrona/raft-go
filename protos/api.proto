@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+option go_package = "api/v1";
+
+package api.v1;
+
+service KeyValueService {
+  rpc Set(SetValueRequest) returns (SetValueResponse);
+  rpc Get(GetValueRequest) returns (GetValueResponse);
+}
+
+message SetValueRequest {
+  uint32 value = 1;
+}
+
+message SetValueResponse {
+  bool ok = 1;
+  string message = 2;
+}
+
+message GetValueRequest {}
+
+message GetValueResponse {
+  uint32 value = 1;
+}
