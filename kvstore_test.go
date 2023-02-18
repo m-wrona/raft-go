@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func Test_kvstore_snapshot(t *testing.T) {
+func Test_KVStore_snapshot(t *testing.T) {
 	tm := map[string]string{"foo": "bar"}
 	s := &kvstore{kvStore: tm}
 

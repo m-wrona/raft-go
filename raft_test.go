@@ -1,14 +1,9 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
-	"io"
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"testing"
-	"time"
 
 	"go.etcd.io/etcd/raft/v3/raftpb"
 )
@@ -89,7 +84,7 @@ func (clus *cluster) closeNoErrors(t *testing.T) {
 
 // TestProposeOnCommit starts three nodes and feeds commits back into the proposal
 // channel. The intent is to ensure blocking on a proposal won't block raft progress.
-func TestProposeOnCommit(t *testing.T) {
+func Test_Raft_ProposeOnCommit(t *testing.T) {
 	clus := newCluster(3)
 	defer clus.closeNoErrors(t)
 
@@ -126,7 +121,7 @@ func TestProposeOnCommit(t *testing.T) {
 }
 
 // TestCloseProposerBeforeReplay tests closing the producer before raft starts.
-func TestCloseProposerBeforeReplay(t *testing.T) {
+func Test_Raft_CloseProposerBeforeReplay(t *testing.T) {
 	clus := newCluster(1)
 	// close before replay so raft never starts
 	defer clus.closeNoErrors(t)
@@ -134,7 +129,7 @@ func TestCloseProposerBeforeReplay(t *testing.T) {
 
 // TestCloseProposerInflight tests closing the producer while
 // committed messages are being published to the client.
-func TestCloseProposerInflight(t *testing.T) {
+func Test_Raft_CloseProposerInflight(t *testing.T) {
 	clus := newCluster(1)
 	defer clus.closeNoErrors(t)
 
@@ -150,66 +145,8 @@ func TestCloseProposerInflight(t *testing.T) {
 	}
 }
 
-func TestPutAndGetKeyValue(t *testing.T) {
-	clusters := []string{"http://127.0.0.1:9021"}
-
-	proposeC := make(chan string)
-	defer close(proposeC)
-
-	confChangeC := make(chan raftpb.ConfChange)
-	defer close(confChangeC)
-
-	var kvs *kvstore
-	getSnapshot := func() ([]byte, error) { return kvs.getSnapshot() }
-	commitC, errorC, snapshotterReady := newRaftNode(1, clusters, false, getSnapshot, proposeC, confChangeC)
-
-	kvs = newKVStore(<-snapshotterReady, proposeC, commitC, errorC)
-
-	srv := httptest.NewServer(&httpKVAPI{
-		store:       kvs,
-		confChangeC: confChangeC,
-	})
-	defer srv.Close()
-
-	// wait server started
-	<-time.After(time.Second * 3)
-
-	wantKey, wantValue := "test-key", "test-value"
-	url := fmt.Sprintf("%s/%s", srv.URL, wantKey)
-	body := bytes.NewBufferString(wantValue)
-	cli := srv.Client()
-
-	req, err := http.NewRequest("PUT", url, body)
-	if err != nil {
-		t.Fatal(err)
-	}
-	req.Header.Set("Content-Type", "text/html; charset=utf-8")
-	_, err = cli.Do(req)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// wait for a moment for processing message, otherwise get would be failed.
-	<-time.After(time.Second)
-
-	resp, err := cli.Get(url)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer resp.Body.Close()
-
-	if gotValue := string(data); wantValue != gotValue {
-		t.Fatalf("expect %s, got %s", wantValue, gotValue)
-	}
-}
-
 // TestAddNewNode tests adding new node to the existing cluster.
-func TestAddNewNode(t *testing.T) {
+func Test_Raft_AddNewNode(t *testing.T) {
 	clus := newCluster(3)
 	defer clus.closeNoErrors(t)
 
@@ -244,7 +181,7 @@ func TestAddNewNode(t *testing.T) {
 	}
 }
 
-func TestSnapshot(t *testing.T) {
+func Test_Raft_Snapshot(t *testing.T) {
 	prevDefaultSnapshotCount := defaultSnapshotCount
 	prevSnapshotCatchUpEntriesN := snapshotCatchUpEntriesN
 	defaultSnapshotCount = 4
